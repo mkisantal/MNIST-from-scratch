@@ -1,6 +1,7 @@
 import mnist_loader
 import numpy as np
 from code import interact
+from utils import show
 
 class net:
 
@@ -69,10 +70,11 @@ def sigmoid(activation):
 
 def softmax(activation):
     max_value = np.max(activation, axis=1)
-    max_value = np.repeat(np.expand_dims(max_value, 1), 10, axis=1)
+    max_value = np.repeat(np.expand_dims(max_value, 1), activation.shape[1], axis=1)
     offset_values = activation - max_value
     exponentiated = np.exp(offset_values)
-    return exponentiated/np.sum(exponentiated, axis=1)
+    sum_exp = np.repeat(np.expand_dims(np.sum(exponentiated, axis=1), 1), activation.shape[1], axis=1)
+    return exponentiated/sum_exp
 
 
 def mean_squared_error(target, output):
@@ -85,46 +87,53 @@ def cross_entropy_error(target, output):
     loss = target.transpose().dot(log_outputs)
     return loss
 
-
-
-
-
-batch_size = 1
-
 # load MNIST dataset
 x_train, t_train, x_test, t_test = mnist_loader.load()
-num_training_set = x_train.shape[0]
-num_test_set = x_test.shape[0]
-input_shape = x_train[0:batch_size, :].shape
+# num_training_set = x_train.shape[0]
+# num_test_set = x_test.shape[0]
+# input_shape = x_train[0:batch_size, :].shape
 output_shape = [1, 10]
 
-input = x_test[0:1, :]/255
+identity_matrix = np.eye(10)
+batch_size = 64
+
+num_batches = x_train.shape[0] // batch_size
+batches = np.reshape(x_train[:num_batches * batch_size, :], [num_batches, batch_size, -1])
+onehot_encoding = identity_matrix[t_train]
+target_batches = np.reshape(onehot_encoding[:num_batches * batch_size, :], [num_batches, batch_size, -1])
+
+input = x_test[0:100, :]/255
+
+
 net = net(784, 10, 30)
 
-onehot = np.eye(10)
-targets = t_train[0:1]
-target = []
-for t in targets:
-  target.append(onehot[t, :])
+# onehot = np.eye(10)
+# targets = t_train[0:100]
+# target = []
+# for t in targets:
+#   target.append(onehot[t, :])
+for j in range(20):
+  for i in range(num_batches):
 
-target = np.array(target)
+      input = batches[i] / 255
+      target = target_batches[i]
+
+      output = net.forward_propagation(input)
+      loss = mean_squared_error(target, output)
+      net.backpropagate(output, target)
+      net.apply_gradients(0.001)
+
+      if i % 100 == 0:
+          print(loss)
 
 
-
-for i in range(1000000):
-    output = net.forward_propagation(input)
-    loss = mean_squared_error(target, output)
-    net.backpropagate(output, target)
-    net.apply_gradients(0.0001)
-
-    if i % 100 == 0:
-        print(loss)
-
-
+print('testing with 5')
+input = batches[0][0] / 255
 output = net.forward_propagation(input)
-target = np.zeros(output_shape)
-target[0, 2] = 1
-net.backpropagate(output, target)
+print(output)
+print(np.argmax(output))
+interact(local=locals())
+
 
 
 
