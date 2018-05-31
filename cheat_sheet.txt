@@ -1,0 +1,21 @@
+# forward propagation
+z = x.dot(self.Wih) + self.Bih  # hidden activation
+h = sigmoid(z)                  # hidden state
+l = h.dot(self.Who) + self.Bho  # output activations
+y = softmax(l)                  # output
+
+
+
+# backpropagation
+
+d_logits = target - output
+
+self.d_Bho = np.ones(self.batch_size).dot(d_logits)
+self.d_Who = self.hidden_state.transpose().dot(d_logits)
+
+d_hidden_state = d_logits.dot(self.Who.transpose())
+
+d_k = np.multiply(np.multiply(self.hidden_state, 1 - self.hidden_state), d_hidden_state)
+
+self.d_Bih = np.ones(self.batch_size).dot(d_k)
+self.d_Wih = self.input.transpose().dot(d_k)
