@@ -6,6 +6,7 @@ Implementing a simple feedforward neural network for MNIST handwritten digit rec
 #### Starting the demo
 
 Start Jupyter:
+
     jupyter notebook
 
 Load 'Neural Network Demo.ipynb' in your browser.
